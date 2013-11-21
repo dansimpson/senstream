@@ -2,18 +2,53 @@
 <html>
   <head>
     <title><%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+    <script src="/javascripts/jquery.js"></script>
+    <script src="/javascripts/metrics.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
-      var socket = io.connect('http://localhost:3000');
-      socket.on('update', function (data) {
-        console.log(data);
+      $(function() {
+        var socket = io.connect("http://localhost:3000");
+        
+        var ts, buf = []
+
+        socket.on("update", function (data) {
+          var time = new Date().getTime();
+          var vals = JSON.parse(data);
+
+          if(ts == null) {
+            if(buf.length > 2) {
+              ts = $ts.build(buf);
+              $metrics.render(ts.series("probe_temp"), {
+                container: $("#viz"),
+                options: {
+                  css: {
+                    height: 200
+                  }
+                },
+                layers: [{
+                  name: "line",
+                  options: {
+                    color: "rgaba(200,33,100,0.6)"
+                  }
+                }, "overlay", "labels"]
+              });
+              return;
+            }
+            buf.push([time, vals]);
+          } else {
+            ts.append(time, vals);
+          }
+        });
+
+        
       });
     </script>
 
   </head>
   <body>
-    <h1><%= title %></h1>
-    <p>Welcome2 to <%= title %></p>
+    <div id="viz">
+
+    </div>
   </body>
 </html>
