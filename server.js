@@ -7,10 +7,7 @@ var express = require('express');
 var routes = require('./routes');
 var http = require('http');
 var path = require('path');
-
-temp_bus.on("update", function () {
-  console.log("emitter update!", this, arguments);
-})
+var app = express();
 
 redis_client.on("error", function () {
   console.log("ERROR!", arguments);
@@ -27,7 +24,7 @@ redis_client.on("ready", function () {
 });
 
 // all environments
-var app = express();
+
 app.set('port', process.env.PORT || 3000);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
@@ -47,6 +44,16 @@ if ('development' == app.get('env')) {
 
 app.get('/', routes.index);
 
-http.createServer(app).listen(app.get('port'), function(){
+var server = http.createServer(app);
+server.listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
 });
+
+// socket.io for web sockets
+var io = require('socket.io').listen(server);
+io.sockets.on('connection', function (socket) {
+  temp_bus.on("update", function(data) {
+    socket.emit("update", data);
+  });
+});
+
