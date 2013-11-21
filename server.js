@@ -1,5 +1,6 @@
 var redis = require("redis"),
-    temp_bus = require("events").EventEmitter,
+    Events = require("events"),
+    temp_bus = new Events.EventEmitter(),
     redis_client = redis.createClient(6379, "192.168.0.2");
 
 temp_bus.addListener("update", function () {
